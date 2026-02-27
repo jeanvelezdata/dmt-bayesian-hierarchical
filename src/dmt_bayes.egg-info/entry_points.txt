@@ -1,0 +1,2 @@
+[console_scripts]
+dmt-bayes = dmt_bayes.cli:main
