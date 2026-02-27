@@ -37,8 +37,45 @@ def write_core_tables(idata, outdir: str | Path):
 
 def plot_trace(idata, outdir: str | Path):
     outdir = ensure_dirs(outdir)
-    ax = az.plot_trace(idata)
+
+    # Plot only high-level parameters to avoid unreadable plots
+    var_names = [
+        "alpha",
+        "beta_time",
+        "sigma",
+        "sd_u0",
+        "sd_u1",
+        "sigma_id",
+        "corr_id",
+    ]
+
+    # Keep only variables that actually exist in the InferenceData
+    existing = []
+    post_vars = set(idata.posterior.data_vars)
+    for v in var_names:
+        if v in post_vars:
+            existing.append(v)
+
+    ax = az.plot_trace(
+        idata,
+        var_names=existing,
+        compact=True,          # more compact layout
+        combined=False,        # show chains separately
+        figsize=(12, 2.2 * len(existing)),  # scale height with number of vars
+    )
+
     fig = ax.ravel()[0].figure
+
+    # Increase spacing so titles and ticks don't overlap
+    fig.subplots_adjust(
+        left=0.08,
+        right=0.98,
+        top=0.98,
+        bottom=0.06,
+        hspace=0.9,
+        wspace=0.25,
+    )
+
     fig.savefig(outdir / "figures" / "trace.png", dpi=200, bbox_inches="tight")
     plt.close(fig)
 
