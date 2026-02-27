@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+.env
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Outputs (do not commit)
+results/
+*.nc
+*.pkl
+*.joblib
+
+# Data (we will download from Zenodo; do not commit raw datasets)
+data/*.csv
+data/*.tsv
+data/*.xlsx
+data/*.parquet
+
+# Figures generated
+*.png
+*.pdf
