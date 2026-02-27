@@ -26,7 +26,3 @@ data/*.csv
 data/*.tsv
 data/*.xlsx
 data/*.parquet
-
-# Figures generated
-*.png
-*.pdf
