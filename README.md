@@ -52,6 +52,30 @@ the standardized pre-to-post change for each measure, with partial pooling towar
 The structure of the hierarchical model is illustrated below.
 
 ![Model Diagram](docs/model_diagram.png)
+
+---
+
+## Findings
+---------------
+
+The hierarchical model found no compelling evidence for robust psychological change following DMT administration once individual variability and partial pooling are accounted for. All seven measures — BFI Extraversion, Agreeableness, Conscientiousness, Neuroticism, and Openness, TAS Absorption, and STAI State Anxiety — returned posterior means close to zero on the standardized scale (|β| < 0.20), with 95% credible intervals crossing zero in every case. The only measure showing a directional tendency was STAI State Anxiety, where the model estimated a modest post-session reduction (posterior mean ≈ −0.20 SD; P(Δ < 0) ≈ 0.80), though the
+effect remains small and highly uncertain. Bayesian R² was extremely low (R² ≈ 0.056), indicating that pre-to-post changes are overwhelmed by individual-level noise and heterogeneity.
+
+Convergence was excellent across all parameters (R̂ = 1.00) and posterior predictive checks confirmed adequate model calibration. These results suggest that the effect sizes reported in the original study were likely inflated by the use of independent paired t-tests, which ignored uncertainty structure and inter-measure dependence. Once the data are modeled jointly with appropriate shrinkage, the evidence for persistent psychological change collapses to near zero.
+
+## Visualize Results
+---------------
+
+Posterior diagnostics and measure-level effects can be visualized directly from the saved inference object.
+
+Trace diagnostics example:
+
+![Trace Example](docs/trace_preview.png)
+
+Measure-specific time effects:
+
+![Forest Example](docs/forest_preview.png)
+
 ---
 
 ## Repository Structure
@@ -159,27 +183,6 @@ Tests run automatically on each commit via GitHub Actions.
 - Saved `.nc` inference objects allow full regeneration of all outputs without refitting
 
 ---
-
-## Findings
----------------
-
-The hierarchical model found no compelling evidence for robust psychological change following DMT administration once individual variability and partial pooling are accounted for. All seven measures — BFI Extraversion, Agreeableness, Conscientiousness, Neuroticism, and Openness, TAS Absorption, and STAI State Anxiety — returned posterior means close to zero on the standardized scale (|β| < 0.20), with 95% credible intervals crossing zero in every case. The only measure showing a directional tendency was STAI State Anxiety, where the model estimated a modest post-session reduction (posterior mean ≈ −0.20 SD; P(Δ < 0) ≈ 0.80), though the
-effect remains small and highly uncertain. Bayesian R² was extremely low (R² ≈ 0.056), indicating that pre-to-post changes are overwhelmed by individual-level noise and heterogeneity.
-
-Convergence was excellent across all parameters (R̂ = 1.00) and posterior predictive checks confirmed adequate model calibration. These results suggest that the effect sizes reported in the original study were likely inflated by the use of independent paired t-tests, which ignored uncertainty structure and inter-measure dependence. Once the data are modeled jointly with appropriate shrinkage, the evidence for persistent psychological change collapses to near zero.
-
-## Visualize Results
----------------
-
-Posterior diagnostics and measure-level effects can be visualized directly from the saved inference object.
-
-Trace diagnostics example:
-
-![Trace Example](docs/trace_preview.png)
-
-Measure-specific time effects:
-
-![Forest Example](docs/forest_preview.png)
 
 ## License
 
