@@ -12,3 +12,4 @@ src/dmt_bayes.egg-info/dependency_links.txt
 src/dmt_bayes.egg-info/entry_points.txt
 src/dmt_bayes.egg-info/requires.txt
 src/dmt_bayes.egg-info/top_level.txt
+tests/test_smoke.py

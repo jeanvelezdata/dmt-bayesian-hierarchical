@@ -8,3 +8,5 @@ Requires-Dist: pymc
 Requires-Dist: arviz
 Requires-Dist: pyyaml
 Requires-Dist: requests
+Provides-Extra: dev
+Requires-Dist: pytest; extra == "dev"

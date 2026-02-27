@@ -73,8 +73,13 @@ def cmd_run(config_path: str) -> None:
     )
 
     # Outputs
-    outdir = cfg["outputs"]["outdir"]
-    save_summary(idata, outdir=outdir)
+    outs = cfg["outputs"]
+    save_summary(
+    idata,
+    outdir=outs["outdir"],
+    save_idata=bool(outs.get("save_idata", True)),
+    save_summary=bool(outs.get("save_summary", True)),
+    )
 
 
 def build_parser() -> argparse.ArgumentParser:

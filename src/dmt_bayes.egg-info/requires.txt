@@ -4,3 +4,6 @@ pymc
 arviz
 pyyaml
 requests
+
+[dev]
+pytest

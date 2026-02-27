@@ -1,13 +1,14 @@
 import arviz as az
-import pandas as pd
 from pathlib import Path
 
 
-def save_summary(idata, outdir="results"):
+def save_summary(idata, outdir="results", save_idata=True, save_summary=True):
     out = Path(outdir)
     out.mkdir(parents=True, exist_ok=True)
 
-    summary = az.summary(idata, hdi_prob=0.95)
-    summary.to_csv(out / "summary.csv")
+    if save_summary:
+        summary = az.summary(idata, hdi_prob=0.95)
+        summary.to_csv(out / "summary.csv")
 
-    idata.to_netcdf(out / "idata.nc")
+    if save_idata:
+        idata.to_netcdf(out / "idata.nc")
