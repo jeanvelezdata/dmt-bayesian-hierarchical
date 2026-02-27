@@ -64,14 +64,21 @@ def build_varmap(df: pd.DataFrame) -> dict[str, tuple[str, str]]:
 def reshape_long(df: pd.DataFrame, varmap: dict):
     """
     Convert wide pre/post format into long format for modeling.
+    Preserves explicit measure ordering from varmap.
     """
-
     rows = []
 
-    for meas, (pre_col, post_col) in varmap.items():
+    # stable measure order = insertion order of varmap
+    measure_order = list(varmap.keys())
+
+    for meas in measure_order:
+        pre_col, post_col = varmap[meas]
+
         tmp = df[[pre_col, post_col]].copy()
         tmp.columns = ["pre", "post"]
         tmp["measure"] = meas
+
+        # participant id = row number (assumption: each row is a subject)
         tmp["id"] = np.arange(len(tmp))
 
         long = tmp.melt(
@@ -80,13 +87,15 @@ def reshape_long(df: pd.DataFrame, varmap: dict):
             var_name="time",
             value_name="score",
         )
-
         rows.append(long)
 
     dat_long = pd.concat(rows, ignore_index=True)
     dat_long = dat_long.dropna(subset=["score"]).reset_index(drop=True)
 
-    return dat_long
+    # lock measure order as categorical so codes match varmap order
+    dat_long["measure"] = pd.Categorical(dat_long["measure"], categories=measure_order, ordered=True)
+
+    return dat_long, measure_order
 
 
 def standardize_within_measure(dat_long: pd.DataFrame):

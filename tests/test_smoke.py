@@ -13,3 +13,6 @@ def test_cli_runs_fast_config():
 
     assert Path("results/tables/posterior_summary.csv").exists()
     assert Path("results/figures/trace.png").exists()
+    assert Path("results/tables/beta_by_measure.csv").exists()
+    assert Path("results/figures/beta_by_measure_forest.png").exists()
+    assert Path("results/measure_labels.json").exists()

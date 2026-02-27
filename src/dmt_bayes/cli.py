@@ -1,6 +1,8 @@
 from __future__ import annotations
 import arviz as az
 from .report import write_core_tables, plot_trace, plot_forest_beta
+from pathlib import Path
+import json
 
 import argparse
 from pathlib import Path
@@ -34,35 +36,32 @@ def cmd_run(config_path: str) -> None:
     # Prepare data
     df = load_data(str(csv_path))
     varmap = build_varmap(df)
-    dat_long = reshape_long(df, varmap)
+
+    # dat_long and measure_order come from reshape_long()
+    dat_long, measure_order = reshape_long(df, varmap)
     dat_long, sd_tbl = standardize_within_measure(dat_long)
 
     y = dat_long["z"].to_numpy()
+    time_c = (dat_long["time"] == "post").astype(int).to_numpy()
 
-    # Center time: pre=−0.5, post=+0.5 so alpha = grand mean
-    time_raw = (dat_long["time"] == "post").astype(float).to_numpy()
-    time_c = time_raw - time_raw.mean()
+    # ids are already integers 0..N-1 if you used np.arange in reshape_long()
+    id_idx = dat_long["id"].to_numpy()
 
-    # Encode IDs as contiguous integers
-    id_cat   = dat_long["id"].astype("category")
-    id_idx   = id_cat.cat.codes.to_numpy()
-    id_labels = id_cat.cat.categories.tolist()
-    n_id     = len(id_labels)
+    # meas_idx must align with measure_order
+    meas_idx = dat_long["measure"].cat.codes.to_numpy()
 
-    # Encode measures as contiguous integers
-    meas_cat   = dat_long["measure"].astype("category")
-    meas_idx   = meas_cat.cat.codes.to_numpy()
-    meas_labels = meas_cat.cat.categories.tolist()
-    n_meas     = len(meas_labels)
+    n_id = int(np.unique(id_idx).size)
+    n_meas = len(measure_order)
 
     coords = {
-        "id":     id_labels,
-        "measure": meas_labels,
-        "coef2":  ["intercept", "time"],
+        "id": np.arange(n_id),
+        "measure": measure_order,
+        "coef2": ["intercept", "slope"],
     }
 
     # Model + sample
     sampler = cfg["sampler"]
+    np.random.seed(cfg.get("seed", 42))
     model = build_model(y, time_c, id_idx, meas_idx, n_id, n_meas, coords)
 
     idata = fit_model(
@@ -76,12 +75,20 @@ def cmd_run(config_path: str) -> None:
 
     # Outputs
     outs = cfg["outputs"]
-    save_summary(
-    idata,
-    outdir=outs["outdir"],
-    save_idata=bool(outs.get("save_idata", True)),
-    save_summary=bool(outs.get("save_summary", True)),
+    outdir = Path(outs["outdir"])
+    outdir.mkdir(parents=True, exist_ok=True)
+
+    (outdir / "measure_labels.json").write_text(
+        json.dumps(measure_order, indent=2),
+        encoding="utf-8",
     )
+    save_summary(
+        idata,
+        outdir=outs["outdir"],
+        save_idata=bool(outs.get("save_idata", True)),
+        save_summary=bool(outs.get("save_summary", True)),
+    )
+    print(f"Model run complete. Outputs written to: {outs['outdir']}")
 
 def cmd_summarize(idata_path: str, outdir: str) -> None:
     idata = az.from_netcdf(idata_path)

@@ -17,32 +17,20 @@ def ensure_dirs(outdir: str | Path):
 def write_core_tables(idata, outdir: str | Path):
     outdir = ensure_dirs(outdir)
 
-    # Full parameter summary (ArviZ)
+    # Full summary
     summ = az.summary(idata, hdi_prob=0.95)
     summ.to_csv(outdir / "tables" / "posterior_summary.csv")
 
-    # Extract measure-specific effects if present
-    if "beta_m" in idata.posterior:
-        beta = idata.posterior["beta_m"]  # dims: chain, draw, measure
-        beta_flat = beta.stack(sample=("chain", "draw")).values  # (measure, sample) or (sample, measure) depending
-        # Ensure shape = (n_meas, n_samp)
-        if beta_flat.shape[0] < beta_flat.shape[1]:
-            beta_flat = beta_flat
-        else:
-            beta_flat = beta_flat.T
+    # Measure-labeled slope table (what reviewers actually care about)
+    if "beta_m_by_measure" in idata.posterior:
+        beta = idata.posterior["beta_m_by_measure"]  # dims: chain, draw, measure
+        beta_df = az.summary(beta, hdi_prob=0.95).reset_index()
 
-        rows = []
-        for j in range(beta_flat.shape[0]):
-            vals = beta_flat[j, :]
-            rows.append(
-                {
-                    "measure_index": j,
-                    "mean": float(np.mean(vals)),
-                    "hdi_2.5%": float(np.quantile(vals, 0.025)),
-                    "hdi_97.5%": float(np.quantile(vals, 0.975)),
-                }
-            )
-        pd.DataFrame(rows).to_csv(outdir / "tables" / "beta_m_effects.csv", index=False)
+        # ArviZ uses "index" column names like "beta_m_by_measure[BFI-E]"
+        # Keep it clean:
+        beta_df = beta_df.rename(columns={"index": "parameter"})
+
+        beta_df.to_csv(outdir / "tables" / "beta_by_measure.csv", index=False)
 
     return outdir
 
@@ -57,10 +45,10 @@ def plot_trace(idata, outdir: str | Path):
 
 def plot_forest_beta(idata, outdir: str | Path):
     outdir = ensure_dirs(outdir)
-    if "beta_m" not in idata.posterior:
+    if "beta_m_by_measure" not in idata.posterior:
         return
 
-    ax = az.plot_forest(idata, var_names=["beta_m"], combined=True, hdi_prob=0.95)
+    ax = az.plot_forest(idata, var_names=["beta_m_by_measure"], combined=True, hdi_prob=0.95)
     fig = ax.ravel()[0].figure
-    fig.savefig(outdir / "figures" / "beta_m_forest.png", dpi=200, bbox_inches="tight")
+    fig.savefig(outdir / "figures" / "beta_by_measure_forest.png", dpi=200, bbox_inches="tight")
     plt.close(fig)
