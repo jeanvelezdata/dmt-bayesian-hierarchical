@@ -1,4 +1,6 @@
 from __future__ import annotations
+import arviz as az
+from .report import write_core_tables, plot_trace, plot_forest_beta
 
 import argparse
 from pathlib import Path
@@ -81,6 +83,15 @@ def cmd_run(config_path: str) -> None:
     save_summary=bool(outs.get("save_summary", True)),
     )
 
+def cmd_summarize(idata_path: str, outdir: str) -> None:
+    idata = az.from_netcdf(idata_path)
+    write_core_tables(idata, outdir)
+
+
+def cmd_plot(idata_path: str, outdir: str) -> None:
+    idata = az.from_netcdf(idata_path)
+    plot_trace(idata, outdir)
+    plot_forest_beta(idata, outdir)
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="dmt-bayes")
@@ -88,7 +99,13 @@ def build_parser() -> argparse.ArgumentParser:
 
     run = sub.add_parser("run", help="Download data (if needed), fit model, and write outputs.")
     run.add_argument("--config", required=True, help="Path to YAML config, e.g. configs/default.yaml")
+    summ = sub.add_parser("summarize", help="Generate tables from an existing idata.nc (no refit).")
+    summ.add_argument("--idata", required=True, help="Path to idata.nc")
+    summ.add_argument("--outdir", default="results", help="Output directory")
 
+    plot = sub.add_parser("plot", help="Generate figures from an existing idata.nc (no refit).")
+    plot.add_argument("--idata", required=True, help="Path to idata.nc")
+    plot.add_argument("--outdir", default="results", help="Output directory")
     return p
 
 
@@ -98,6 +115,10 @@ def main() -> None:
 
     if args.cmd == "run":
         cmd_run(args.config)
+    elif args.cmd == "summarize":
+        cmd_summarize(args.idata, args.outdir)
+    elif args.cmd == "plot":
+        cmd_plot(args.idata, args.outdir)
     else:
         raise SystemExit(f"Unknown command: {args.cmd}")
 
