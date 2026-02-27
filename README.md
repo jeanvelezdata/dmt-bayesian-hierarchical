@@ -1,6 +1,13 @@
+[![CI](https://github.com/jeanvelezdata/dmt-bayesian-hierarchical/actions/workflows/ci.yml/badge.svg)](https://github.com/YOURNAME/REPO/actions)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue)]()
+[![License](https://img.shields.io/badge/license-MIT-green)]()
+
 # Bayesian Hierarchical Model of Pre–Post Psychological Measures
 
-A fully reproducible Bayesian hierarchical model analyzing changes in psychological measures before and after an intervention. The model jointly estimates change across multiple scales while partially pooling information across subjects and measures — allowing more stable inference than separate paired tests, while accounting for heterogeneity across individuals and scales.
+A Bayesian re-analysis of Pallavicini et al. (2021), which examined personality, absorption, and state anxiety changes following inhaled N,N-dimethyltryptamine (DMT) in naturalistic settings. The original study relied on paired t-tests conducted independently for each psychological scale, an approach that ignores participant-level trajectories, treats outcomes as statistically independent, and does not account for the hierarchical structure of repeated-measures data.
+
+This project replaces that approach with a unified Bayesian hierarchical model that jointly estimates pre-to-post change across all scales simultaneously. By partially pooling information across both subjects and measures, the model produces more stable effect estimates, propagates uncertainty coherently, and handles multiplicity implicitly through shrinkage rather than post-hoc correction. The result is a statistically principled re-examination of whether the reported psychological effects
+persist once individual differences, shared variance across scales, and measurement noise are fully accounted for.
 
 ---
 
@@ -39,6 +46,12 @@ Subject random effects use a correlated covariance structure via manual Cholesky
 
 the standardized pre-to-post change for each measure, with partial pooling toward the global effect.
 
+---
+## Model Visualization
+
+The structure of the hierarchical model is illustrated below.
+
+![Model Diagram](docs/model_diagram.png)
 ---
 
 ## Repository Structure
@@ -146,6 +159,19 @@ Tests run automatically on each commit via GitHub Actions.
 - Saved `.nc` inference objects allow full regeneration of all outputs without refitting
 
 ---
+
+Example Results
+---------------
+
+Posterior diagnostics and measure-level effects can be visualized directly from the saved inference object.
+
+Trace diagnostics example:
+
+![Trace Example](docs/trace_preview.png)
+
+Measure-specific time effects:
+
+![Forest Example](docs/forest_preview.png)
 
 ## License
 

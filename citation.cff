@@ -1,0 +1,8 @@
+cff-version: 1.2.0
+title: Bayesian Hierarchical Model of Pre–Post Psychological Measures
+message: If you use this model or code, please cite it as below.
+authors:
+  - family-names: Velez
+    given-names: Jean
+version: 1.0.0
+date-released: 2026-02-27
