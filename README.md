@@ -1,318 +1,152 @@
-Bayesian Hierarchical Model of Pre–Post Psychological Measures
+# Bayesian Hierarchical Model of Pre–Post Psychological Measures
 
-==============================================================
+A fully reproducible Bayesian hierarchical model analyzing changes in psychological measures before and after an intervention. The model jointly estimates change across multiple scales while partially pooling information across subjects and measures — allowing more stable inference than separate paired tests, while accounting for heterogeneity across individuals and scales.
 
+---
 
-
-Overview
-
---------
-
-This repository contains a fully reproducible Bayesian hierarchical model analyzing changes in psychological measures before and after an intervention.
-
-
-
-The model jointly estimates change across multiple scales while partially pooling information across:
-
-
-
-• subjects (random intercepts and slopes)  
-
-• measures (random intercepts and slopes)
-
-
-
-This allows more stable inference than running separate paired tests per scale, while accounting for heterogeneity across individuals and measures.
-
-
-
-
-
-Data Source
-
------------
+## Data Source
 
 The dataset is publicly hosted on Zenodo:
+**https://zenodo.org/records/3992359**
 
+The repository automatically downloads the dataset at runtime and verifies its checksum to ensure reproducibility. No raw data are stored in this repository.
 
+---
 
-https://zenodo.org/records/3992359
+## Model Structure
 
+Standardized outcome scores are modeled as:
 
+```
+y ~ Normal(μ, σ)
 
-The repository automatically downloads the dataset during execution and verifies its checksum to ensure reproducibility.
+μ = α + β·time + b0_i + b1_i·time + u0_m + u1_m·time
+```
 
+| Term | Description |
+|------|-------------|
+| `α` | Global intercept |
+| `β` | Global time effect |
+| `b0_i, b1_i` | Subject random intercepts and slopes (correlated) |
+| `u0_m, u1_m` | Measure random intercepts and slopes (independent) |
+| `σ` | Residual noise |
 
+Subject random effects use a correlated covariance structure via manual Cholesky decomposition. Measure effects use a non-centered parameterization. The primary estimand is:
 
-No raw data are stored in this repository.
+```
+β_m[measure] = β + u1_m[measure]
+```
 
+the standardized pre-to-post change for each measure, with partial pooling toward the global effect.
 
+---
 
+## Repository Structure
 
+```
+configs/            Run configurations (default.yaml, fast.yaml)
+src/dmt_bayes/      Core package
+  ├── data_prep.py  Reshape and standardize data
+  ├── model.py      Hierarchical PyMC model
+  ├── fit.py        Sampler interface
+  ├── summarize.py  Tables and posterior summaries
+  ├── report.py     Figures and plots
+  └── cli.py        Command-line interface
+tests/              Smoke tests
+results/            Generated outputs (git-ignored)
+```
 
-Model Structure
+---
 
----------------
+## Installation
 
-The model estimates standardized outcome scores using:
+Create a conda environment and install in editable mode:
 
+```bash
+conda create -n dmt_env python=3.11 -y
+conda activate dmt_env
+pip install -e .
+```
 
+**Dependencies:** `pymc`, `arviz`, `pandas`, `numpy`, `matplotlib`, `pyyaml`, `requests`
 
-• a global intercept  
+---
 
-• a global time effect  
+## Reproducing Results
 
-• subject-level random intercepts and slopes  
+Run the full pipeline:
 
-• measure-level random intercepts and slopes  
-
-• residual noise  
-
-
-
-Subject random effects are modeled with a correlated covariance structure using a manual Cholesky decomposition.
-
-
-
-Measure effects are modeled independently using a non-centered parameterization.
-
-
-
-The primary estimand is:
-
-
-
-&nbsp;   β\_m = global time effect + measure-specific deviation
-
-
-
-which represents the standardized change from pre to post for each measure.
-
-
-
-
-
-Repository Structure
-
---------------------
-
-configs/          Run configurations  
-
-src/dmt\_bayes/    Core package code  
-
-tests/            Smoke tests  
-
-results/          Generated outputs (ignored by git)  
-
-
-
-Key modules:
-
-
-
-• data\_prep.py — reshape + standardization  
-
-• model.py — hierarchical PyMC model  
-
-• fit.py — sampler interface  
-
-• report.py — tables and plots  
-
-• cli.py — command-line interface  
-
-
-
-
-
-Installation
-
-------------
-
-Create an environment and install in editable mode:
-
-
-
-&nbsp;   python -m pip install -e .
-
-
-
-Dependencies include:
-
-
-
-• pymc  
-
-• arviz  
-
-• pandas  
-
-• numpy  
-
-• matplotlib  
-
-• pyyaml  
-
-• requests  
-
-
-
-
-
-Reproducing Results
-
--------------------
-
-Run the full workflow:
-
-
-
-&nbsp;   dmt-bayes run --config configs/default.yaml
-
-
+```bash
+dmt-bayes run --config configs/default.yaml
+```
 
 For a fast demonstration run:
 
-
-
-&nbsp;   dmt-bayes run --config configs/fast.yaml
-
-
+```bash
+dmt-bayes run --config configs/fast.yaml
+```
 
 This will:
+1. Download the dataset from Zenodo and verify its checksum
+2. Fit the hierarchical model via NUTS
+3. Save posterior draws and summaries to `results/`
 
+---
 
+## Generating Tables and Plots
 
-1\. Download the dataset from Zenodo  
+Re-generate outputs from saved inference data without refitting:
 
-2\. Fit the hierarchical model  
+```bash
+dmt-bayes summarize --idata results/idata.nc
+dmt-bayes plot --idata results/idata.nc
+```
 
-3\. Save posterior draws and summaries  
+---
 
+## Outputs
 
+| Path | Contents |
+|------|----------|
+| `results/idata.nc` | Full posterior draws (NetCDF) |
+| `results/measure_labels.json` | Measure coordinate labels |
+| `results/tables/posterior_summary.csv` | Posterior means and credible intervals |
+| `results/tables/beta_by_measure.csv` | Per-measure time effects |
+| `results/figures/trace.png` | Trace plots |
+| `results/figures/beta_by_measure_forest.png` | Forest plot of measure-level effects |
 
+---
 
+## Interpretation
 
-Generating Tables and Plots (no refit required)
+Outcomes are standardized within each measure prior to modeling, so all estimated slopes are in **standard deviation units**:
 
------------------------------------------------
+- A value of `0.5` indicates a half-SD increase from pre to post
+- Uncertainty intervals are posterior 94% credible intervals
+- The hierarchical structure provides shrinkage toward the global effect, robust estimation for noisy measures, and simultaneous inference across all scales
 
-From saved inference results:
+---
 
+## Testing
 
+A smoke test verifies the full pipeline runs end-to-end:
 
-&nbsp;   dmt-bayes summarize --idata results/idata.nc
+```bash
+pytest
+```
 
-&nbsp;   dmt-bayes plot --idata results/idata.nc
+Tests run automatically on each commit via GitHub Actions.
 
+---
 
+## Reproducibility
 
+- Dataset pulled from a fixed Zenodo record with checksum verification
+- Config-driven sampling parameters
+- Saved `.nc` inference objects allow full regeneration of all outputs without refitting
 
+---
 
-Outputs
+## License
 
--------
-
-Posterior draws:
-
-&nbsp;   results/idata.nc
-
-
-
-Measure labels:
-
-&nbsp;   results/measure\_labels.json
-
-
-
-Tables:
-
-&nbsp;   results/tables/posterior\_summary.csv
-
-&nbsp;   results/tables/beta\_by\_measure.csv
-
-
-
-Figures:
-
-&nbsp;   results/figures/trace.png
-
-&nbsp;   results/figures/beta\_by\_measure\_forest.png
-
-
-
-
-
-Interpretation
-
---------------
-
-Outcomes are standardized within each measure prior to modeling.
-
-
-
-Therefore:
-
-
-
-• estimated slopes are expressed in standard deviation units  
-
-• a value of 0.5 indicates a half-SD increase from pre to post  
-
-• uncertainty intervals reflect posterior credible intervals  
-
-
-
-The hierarchical structure allows:
-
-
-
-• shrinkage toward the global effect  
-
-• robust estimation for noisy measures  
-
-• simultaneous inference across scales  
-
-
-
-
-
-Testing
-
--------
-
-A smoke test verifies the full pipeline runs:
-
-
-
-&nbsp;   pytest
-
-
-
-GitHub Actions automatically runs tests on each commit.
-
-
-
-
-
-Reproducibility Guarantees
-
---------------------------
-
-• Dataset downloaded from a fixed Zenodo record  
-
-• Checksum verification enforced  
-
-• Config-driven sampling  
-
-• Saved inference objects allow full regeneration of outputs  
-
-
-
-
-
-License
-
--------
-
-MIT License
-
+MIT
