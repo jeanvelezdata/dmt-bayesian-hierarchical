@@ -19,12 +19,14 @@ def build_varmap(df: pd.DataFrame) -> dict[str, tuple[str, str]]:
     """
     Explicit pre/post column mapping for Zenodo record 3992359 (scales_results.csv).
 
-    Convention in this file:
-      - Time 1 (pre) columns end with "...1-<subscale>" or "STAI1-E"
-      - Time 2 (post) columns end with "...2-<subscale>" or "STAI2-E"
+    Seven outcome measures matching the manuscript analysis (methods §2.2):
+      - Big Five Inventory (BFI): five subscales
+      - Tellegen Absorption Scale (TAS): total score
+      - State-Trait Anxiety Inventory — State subscale (STAI-E)
 
-    Note:
-      - STAI1-R exists, but STAI2-R does NOT, so it is excluded from paired analyses.
+    Notes:
+      - STAI1-R exists, but STAI2-R does NOT, so Trait anxiety is excluded.
+      - MBS subscales are present in the dataset but are not part of this analysis.
     """
     varmap = {
         # Big Five Inventory (BFI)
@@ -34,16 +36,11 @@ def build_varmap(df: pd.DataFrame) -> dict[str, tuple[str, str]]:
         "BFI-N": ("BFI1-N", "BFI2-N"),
         "BFI-O": ("BFI1-O", "BFI2-O"),
 
-        # State-Trait Anxiety Inventory (paired only where both timepoints exist)
+        # State anxiety (paired; STAI-Trait excluded — no post-session observation)
         "STAI-E": ("STAI1-E", "STAI2-E"),
 
-        # Metaphysical Beliefs Scale (MBS)
-        "MBS-Dualismo": ("MBS1-Dualismo", "MBS2-Dualismo"),
-        "MBS-Idealismo": ("MBS1-Idealismo", "MBS2-Idealismo"),
-        "MBS-Materialismo": ("MBS1-Materialismo", "MBS2-Materialismo"),
-        "MBS-OtrosReinos": ("MBS1-OtrosReinos", "MBS2-OtrosReinos"),
-        "MBS-DeterminismoFatalista": ("MBS1-DeterminismoFatalista", "MBS2-DeterminismoFatalista"),
-        "MBS-LibreAlbedrio": ("MBS1-LibreAlbedrio", "MBS2-LibreAlbedrio"),
+        # Tellegen Absorption Scale
+        "TAS": ("TAS1", "TAS2"),
     }
 
     # Hard fail if Zenodo schema changes or file is wrong

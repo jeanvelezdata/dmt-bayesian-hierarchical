@@ -18,13 +18,13 @@ def write_core_tables(idata, outdir: str | Path):
     outdir = ensure_dirs(outdir)
 
     # Full summary
-    summ = az.summary(idata, hdi_prob=0.95)
+    summ = az.summary(idata, hdi_prob=0.94)
     summ.to_csv(outdir / "tables" / "posterior_summary.csv")
 
     # Measure-labeled slope table (what reviewers actually care about)
     if "beta_m_by_measure" in idata.posterior:
         beta = idata.posterior["beta_m_by_measure"]  # dims: chain, draw, measure
-        beta_df = az.summary(beta, hdi_prob=0.95).reset_index()
+        beta_df = az.summary(beta, hdi_prob=0.94).reset_index()
 
         # ArviZ uses "index" column names like "beta_m_by_measure[BFI-E]"
         # Keep it clean:
@@ -85,7 +85,7 @@ def plot_forest_beta(idata, outdir: str | Path):
     if "beta_m_by_measure" not in idata.posterior:
         return
 
-    ax = az.plot_forest(idata, var_names=["beta_m_by_measure"], combined=True, hdi_prob=0.95)
+    ax = az.plot_forest(idata, var_names=["beta_m_by_measure"], combined=True, hdi_prob=0.94)
     fig = ax.ravel()[0].figure
     fig.savefig(outdir / "figures" / "beta_by_measure_forest.png", dpi=200, bbox_inches="tight")
     plt.close(fig)

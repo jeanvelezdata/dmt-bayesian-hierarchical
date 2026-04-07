@@ -42,7 +42,7 @@ def cmd_run(config_path: str) -> None:
     dat_long, sd_tbl = standardize_within_measure(dat_long)
 
     y = dat_long["z"].to_numpy()
-    time_c = (dat_long["time"] == "post").astype(int).to_numpy()
+    time_c = np.where(dat_long["time"] == "pre", -0.5, 0.5).astype(float)
 
     # ids are already integers 0..N-1 if you used np.arange in reshape_long()
     id_idx = dat_long["id"].to_numpy()
@@ -71,6 +71,7 @@ def cmd_run(config_path: str) -> None:
         chains=int(sampler["chains"]),
         target_accept=float(sampler["target_accept"]),
         max_treedepth=int(sampler.get("max_treedepth", 12)),
+        random_seed=int(cfg.get("seed", 42)),
     )
 
     # Outputs

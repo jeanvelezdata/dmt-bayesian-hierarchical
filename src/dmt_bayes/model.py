@@ -9,12 +9,19 @@ def build_model(y, time_c, id_idx, meas_idx, n_id, n_meas, coords=None):
 
     with pm.Model(coords=coords) as model:
 
+        # Mutable data containers so pm.set_data() works for CV / out-of-sample evaluation
+        y_obs    = pm.Data("y_obs",     y)
+        time_obs = pm.Data("time_c",   time_c)
+        id_obs   = pm.Data("id_idx",   id_idx)
+        meas_obs = pm.Data("meas_idx", meas_idx)
+
         # --- Global fixed effects ---
         alpha = pm.Normal("alpha", 0.0, 1.0)
         beta  = pm.Normal("beta_time", 0.0, 1.0)
 
         # --- Subject REs: manual Cholesky (avoids LKJCholeskyCov einsum bug in PyMC 5.26) ---
-        # Equivalent to LKJCholeskyCov(eta=5, sd_dist=HalfNormal(0.75))
+        # For a 2×2 matrix, Uniform(-1,1) on the scalar correlation is equivalent to
+        # LKJ(eta=1), i.e., a flat prior over all admissible correlations.
         sigma_id = pm.HalfNormal("sigma_id", 0.75, shape=2)
         corr_id  = pm.Uniform("corr_id", -1.0, 1.0)
 
@@ -46,14 +53,14 @@ def build_model(y, time_c, id_idx, meas_idx, n_id, n_meas, coords=None):
         # --- Linear predictor ---
         mu = (
             alpha
-            + beta * time_c
-            + b0_i[id_idx]
-            + b1_i[id_idx] * time_c
-            + u0_m[meas_idx]
-            + u1_m[meas_idx] * time_c
+            + beta * time_obs
+            + b0_i[id_obs]
+            + b1_i[id_obs] * time_obs
+            + u0_m[meas_obs]
+            + u1_m[meas_obs] * time_obs
         )
 
-        pm.Normal("y", mu, sigma, observed=y)
+        pm.Normal("y", mu, sigma, observed=y_obs)
 
         # Measure-specific total time slope (fixed + random)
         pm.Deterministic("beta_m_by_measure", beta + u1_m, dims=("measure",))

@@ -1,3 +1,4 @@
+README.md
 pyproject.toml
 src/dmt_bayes/__init__.py
 src/dmt_bayes/cli.py
@@ -5,6 +6,7 @@ src/dmt_bayes/data_prep.py
 src/dmt_bayes/download.py
 src/dmt_bayes/fit.py
 src/dmt_bayes/model.py
+src/dmt_bayes/report.py
 src/dmt_bayes/summarize.py
 src/dmt_bayes.egg-info/PKG-INFO
 src/dmt_bayes.egg-info/SOURCES.txt
