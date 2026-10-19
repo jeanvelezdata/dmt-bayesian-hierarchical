@@ -402,15 +402,35 @@ def plot_shrinkage():
     ax.scatter(np_mean, h_mean, color=C_HIER, s=60, zorder=5,
                label="Hierarchical posterior mean")
 
-    # Point labels (offset to avoid overlap)
+    # Point labels — per-label offsets to prevent cluster overlap.
+    # Upper-right cluster: BFI-E / BFI-A / TAS sit within ~0.06 SD units of
+    # each other; center cluster: BFI-O / BFI-C overlap similarly.
+    _OFFSETS = {
+        # isolated — small nudge
+        "STAI-E": (6,   6),
+        "BFI-N":  (6,   6),
+        # center cluster: fan up-right vs. down-left
+        "BFI-C":  (6,   10),
+        "BFI-O":  (6,  -14),
+        # upper-right cluster: fan in three directions
+        "TAS":    (6,   14),
+        "BFI-A":  (-48,  6),
+        "BFI-E":  (6,  -14),
+    }
+    _CONNECTOR = dict(arrowstyle="-", lw=0.5, color="#aaaaaa")
+    _DEFAULT   = (6, 5)
+
     for m, lbl in enumerate(meas_coords):
+        dx, dy = _OFFSETS.get(lbl, _DEFAULT)
+        needs_connector = abs(dx) > 12 or abs(dy) > 12
         ax.annotate(
             lbl,
             xy=(np_mean[m], h_mean[m]),
-            xytext=(5, 4),
+            xytext=(dx, dy),
             textcoords="offset points",
             fontsize=8.5,
             color="#222222",
+            arrowprops=_CONNECTOR if needs_connector else None,
         )
 
     ax.set_xlabel(f"{np_label}  " + r"($\beta_m$, SD units)", fontsize=11)
@@ -643,7 +663,7 @@ def plot_figure_s1_trace_rhat():
     axr.legend(fontsize=8, loc="upper right")
 
     fig.suptitle(
-        r"Figure S1 — Convergence diagnostics (traces + $\hat{R}$)",
+        r"Convergence diagnostics (traces + $\hat{R}$)",
         fontsize=12,
         y=1.01,
     )
@@ -722,7 +742,7 @@ def plot_figure_2a_ppc_pooled():
     ax.set_xlabel("Standardised score (z)", fontsize=11)
     ax.set_ylabel("Density", fontsize=11)
     ax.set_title(
-        "Figure 2a — Pooled posterior predictive check\n(all measures combined)",
+        "Pooled posterior predictive check\n(all measures combined)",
         fontsize=11,
         pad=8,
     )
@@ -818,7 +838,7 @@ def plot_figure_2b_ppc_by_measure():
         axes_flat[j].set_visible(False)
 
     fig.suptitle(
-        "Figure 2b — Posterior predictive checks by measure",
+        "Posterior predictive checks by measure",
         fontsize=12,
         y=1.02,
     )
@@ -986,7 +1006,7 @@ def plot_figure_4_sensitivity_forest():
     )
     ax.set_ylabel("Outcome Measure", fontsize=11)
     ax.set_title(
-        "Figure 4 — Prior Sensitivity: $\\beta_m$ Posteriors Across\n"
+        "Prior Sensitivity: $\\beta_m$ Posteriors Across\n"
         "Three Prior Specifications (A = default, B = tighter, C = wider)",
         fontsize=11, pad=10,
     )
